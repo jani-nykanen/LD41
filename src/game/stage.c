@@ -22,6 +22,8 @@ static TILEMAP* mapBase;
 
 // Tile data
 static int* tiledata =NULL;
+// Visited tiles
+static bool visitedTiles[4*4]; 
 
 
 
@@ -48,7 +50,7 @@ static int gen_map() {
         }
         else {
 
-            bmpMap->data[i] = 0;
+            bmpMap->data[i] = 0b01001001;
         }
 
     }
@@ -88,11 +90,18 @@ static void draw_tilemap_area(TILEMAP* t, int sx, int sy, int ex, int ey) {
 }
 
 
+// Is tile hurt tile
+static bool is_hurt_tile(int t) {
+
+    return (t >= 8 && t <= 12);
+}
+
+
 // Is tile not solid
 static bool is_not_solid(int t) {
 
     STATUS* st = get_status();
-    return (t == 0 || t > 32 || (st->items[1] && (t == 7 || t == 23)));
+    return (is_hurt_tile(t) || t == 0 || t > 32 || (st->items[1] && (t == 7 || t == 23)));
 }
 
 
@@ -131,7 +140,7 @@ int stage_init(ASSET_PACK* ass) {
     if(tiledata == NULL)
         tiledata = (int*)malloc(sizeof(int) * mapBase->width * mapBase->height);
 
-    if(tiledata == NULL) {
+    if(tiledata == NULL ) {
 
         error_mem_alloc();
         return 1;
@@ -142,6 +151,8 @@ int stage_init(ASSET_PACK* ass) {
     for(; i < mapBase->width * mapBase->height; ++ i) {
 
         tiledata[i] = mapBase->layers[0][i];
+        if(i < 4*4)
+            visitedTiles[i] = false;
     }
 
     // Generate map
@@ -160,6 +171,12 @@ int stage_init(ASSET_PACK* ass) {
 // Update stage
 void stage_update(float tm) {
 
+    VEC2 cpos = get_global_camera()->pos;
+
+    int x = (int)floor(cpos.x / 224);
+    int y = (int)floor(cpos.y / 176);
+
+    visitedTiles[y * 4 + x] = true;
 }
 
 
@@ -191,6 +208,13 @@ void stage_pl_collision(PLAYER* pl, float tm) {
                 continue;
 
             tile = tiledata[y * w+x];
+
+            if(is_hurt_tile(tile)) {
+
+                pl_hurt_collision(pl,x*16+2,y*16+2,12,12);
+                continue;
+            }
+
             if(is_not_solid(tile))
                 continue;
 
@@ -267,8 +291,9 @@ void stage_draw(VEC2 p) {
 // Draw map
 void stage_draw_map(int x, int y, VEC2 p) {
 
-    fill_rect(x-2,y-2,bmpMap->width+4,bmpMap->height+4, 0b01101101);
-    fill_rect(x-1,y-1,bmpMap->width+2,bmpMap->height+2, 255);
+    fill_rect(x-3,y-3,bmpMap->width+6,bmpMap->height+6, 0);
+    fill_rect(x-2,y-2,bmpMap->width+4,bmpMap->height+4, 255);
+    fill_rect(x-1,y-1,bmpMap->width+2,bmpMap->height+2, 0b01101101);
     draw_bitmap_fast(bmpMap, x, y);
 
     // Player
@@ -276,4 +301,17 @@ void stage_draw_map(int x, int y, VEC2 p) {
     int py = (int)floor(p.y / 16.0f);
 
     fill_rect(x +px-1, y+py-1,3,3, 0b11100000);
+
+    int dx,dy;
+    for(dy = 0; dy < 4; ++ dy) {
+
+        for(dx = 0; dx < 4; ++ dx) {
+            
+            if(!visitedTiles[dy*4 + dx]) {
+
+                fill_rect(x + dx*14, y + dy*11, 14,11, 0);
+            }
+
+        }
+    }
 }

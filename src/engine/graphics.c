@@ -312,7 +312,7 @@ void draw_text(BITMAP* font, const char* text,
 
     if(center) {
 
-        dx -= (len + cw) / 2;
+        dx -= (int) ( ((float)len+1)/2.0f * (float)(cw+xoff) );
         x = dx;
     }
 

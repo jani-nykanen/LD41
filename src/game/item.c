@@ -4,6 +4,7 @@
 
 #include "item.h"
 
+#include "game.h"
 #include "status.h"
 #include "camera.h"
 
@@ -90,6 +91,7 @@ void item_update(ITEM* it, PLAYER* pl, float tm) {
         case 2:
         case 3:
             st->items[it->type] = true;
+            set_item_text(it->type);
             ++ st->redCount; break;
 
         case 4:

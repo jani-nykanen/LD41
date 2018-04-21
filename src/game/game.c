@@ -33,6 +33,11 @@ static BITMAP* gameCanvas;
 static PLAYER pl;
 static ITEM items[ITEM_COUNT];
 
+// Item text timer
+static float itemTextTimer;
+// Item text id
+static int itemTextID;
+
 
 // Set the cursor mode
 static void game_set_cursor_mode() {
@@ -68,6 +73,23 @@ static void game_set_cursor_mode() {
     }
 
     set_cursor_mode(mode);
+}
+
+
+// Draw item text
+static void draw_item_text() {
+
+    const char* text[] = {
+        "You learned DIG!",
+        "You learned\nNIGHT VISION!",
+        "You learned\nSUPER DIG!",
+        "You learned SWIM!"
+    };
+
+    if(itemTextID == 0 || itemTextID == 3)
+        draw_text(bmpFont,text[itemTextID],224/2,16,-7,0,true);
+    else
+        draw_text(bmpFont,text[itemTextID],224/2 -60,16,-7,0,false);
 }
 
 
@@ -124,17 +146,24 @@ static void game_update(float tm) {
         stage_update(tm);
         stage_pl_collision(&pl, tm);
 
-        // Update items
-        int i = 0;
-        for(; i < ITEM_COUNT; ++ i) {
-
-            item_update(&items[i], &pl, tm);
-        }
-
+        // Update status
+        status_update(tm);
     }
 
-    // Update status
-    status_update(tm);
+    // Update items
+    int i = 0;
+    for(; i < ITEM_COUNT; ++ i) {
+
+        item_update(&items[i], &pl, tm);
+    }
+
+
+    // Update item text
+    if(itemTextTimer > 0.0f) {
+
+        itemTextTimer -= 1.0f * tm;
+    }
+
 }
 
 
@@ -159,6 +188,12 @@ static void draw_to_canvas() {
     // Draw player
     pl_draw(&pl);
 
+    // Draw item text
+    if(itemTextTimer > 0.0f) {
+
+        translate(CANVAS_X, CANVAS_Y);
+        draw_item_text();
+    }
 }
 
 
@@ -193,7 +228,7 @@ static void draw_status() {
 static void game_draw() {
 
     // Clear screen
-    clear(0);
+    clear(0b01100100);
 
     // Set target to the canvas
     set_render_target(gameCanvas),
@@ -205,13 +240,13 @@ static void game_draw() {
     int x = CANVAS_X;
     int y = CANVAS_Y;
 
-    fill_rect(x-3,y-3,gameCanvas->width +6, gameCanvas->height +6, 0b01101101);
-    fill_rect(x-2,y-2,gameCanvas->width +4, gameCanvas->height +4, 255);
-    fill_rect(x-1,y-1,gameCanvas->width +2, gameCanvas->height +2, 0);
+    fill_rect(x-3,y-3,gameCanvas->width +6, gameCanvas->height +6, 0);
+    fill_rect(x-2,y-2,gameCanvas->width +4, gameCanvas->height +4, 0b01101101);
+    fill_rect(x-1,y-1,gameCanvas->width +2, gameCanvas->height +2, 255);
     draw_bitmap_fast(gameCanvas, x,y);
 
     // Draw map
-    draw_text(bmpFont,"MAP:",320-72 +24,8,-7,0,true);
+    draw_text(bmpFont,"MAP:",320-72 +36,8,-6,0,true);
     stage_draw_map(320-72 +4,12 +12, pl.pos);
 
     draw_status();
@@ -254,4 +289,13 @@ void add_item(POINT p, int type) {
             return;
         }
     }
+}
+
+
+// Set item text
+void set_item_text(int id) {
+
+    itemTextTimer = 150.0f;
+    itemTextID = id;
+
 }

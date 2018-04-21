@@ -15,4 +15,7 @@ SCENE game_get_scene();
 // Add an item
 void add_item(POINT p, int type);
 
+// Set item text
+void set_item_text(int id);
+
 #endif // __GAME__

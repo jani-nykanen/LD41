@@ -9,6 +9,9 @@
 #include "../include/renderer.h"
 #include "../include/std.h"
 
+// Gas count
+#define GAS_COUNT 16
+
 // Collision types
 enum {
 
@@ -17,6 +20,17 @@ enum {
     COL_LEFT = 2,
     COL_DOWN = 3,
 };
+
+// Gas
+typedef struct {
+
+    VEC2 pos;
+    float timer;    
+    bool exist;
+    int frame;
+}
+GAS;
+
 
 // Player
 typedef struct {
@@ -35,6 +49,9 @@ typedef struct {
     SPRITE pspr;
     float pspeed;
     float hurtTimer;
+
+    GAS gas[GAS_COUNT];
+    float gasTimer;
 }
 PLAYER;
 

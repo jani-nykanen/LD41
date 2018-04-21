@@ -5,6 +5,7 @@
 #include "player.h"
 
 #include "camera.h"
+#include "status.h"
 
 #include "../global.h"
 
@@ -14,6 +15,58 @@ static const float PL_TARGET = 1.5f;
 
 // Bitmaps
 static BITMAP* bmpPlayer;
+
+
+// Update gas
+static void update_gas(GAS* g, float tm) {
+
+    const float SPEED = 10.0f;
+
+    if(g->exist == false) return;
+
+    g->timer += 1.0f * tm,
+    g->frame = (int)(g->timer / SPEED);
+
+    if(g->frame >= 5)
+        g->exist = false;
+}
+
+
+// Generate gas
+static void pl_gen_gas(PLAYER* pl, float tm) {
+
+    // Update gas
+    int i = 0;
+    for(; i < GAS_COUNT; ++ i) {
+
+        update_gas(&pl->gas[i], tm);
+    }
+
+    const float GAS_LIMIT = 10.0f;
+
+    if(!pl->moving) return;
+
+    pl->gasTimer += 1.0f * tm;
+    if(pl->gasTimer >= GAS_LIMIT) {
+
+        pl->gasTimer -= GAS_LIMIT;
+
+        // Create gas
+        for(i=0; i < GAS_COUNT; ++ i) {
+
+            if(pl->gas[i].exist == false) {
+
+                pl->gas[i].pos = vec2(pl->pos.x,pl->pos.y+6);
+                pl->gas[i].timer = 0;
+                pl->gas[i].frame = 0;
+                pl->gas[i].exist = true;
+
+                return;
+            }
+        }
+    }
+
+}
 
 
 // Control
@@ -145,6 +198,16 @@ static void pl_animate(PLAYER* pl, float tm) {
 
     if(pl->pspeed > 0.0f)
         spr_animate(&pl->pspr,2,0,3, 18 - pl->pspeed, tm);
+
+
+    if(pl->hurtTimer > 0.0f) {
+
+        spr_animate(&pl->spr, 1, 0,1,3, tm);
+    }
+    else {
+
+        pl->spr.frame = 0;
+    }
 }
 
 
@@ -203,6 +266,10 @@ PLAYER create_player(VEC2 pos, ASSET_PACK* ass) {
         bmpPlayer = (BITMAP*)assets_get(ass, "player");
     }
 
+    int i = 0;
+    for(; i < GAS_COUNT; ++ i)
+        pl.gas[i].exist = false;
+
     return pl;
 }
 
@@ -214,11 +281,29 @@ void pl_update(PLAYER* pl, float tm) {
     pl_move(pl, tm);
     pl_animate(pl, tm);
     pl_screen_transition(pl);
+    pl_gen_gas(pl, tm);
+
+    if(pl->hurtTimer > 0.0f)
+        pl->hurtTimer -= 1.0f * tm;
 }
 
 
 // Draw player
 void pl_draw(PLAYER* pl) {
+
+    // Draw gas
+    int i = 0;
+    GAS g;
+    for(; i < GAS_COUNT; ++ i) {
+        
+        g = pl->gas[i];
+        if(!g.exist) continue;
+
+        int sx = g.frame * 16.0f;
+
+        draw_bitmap_region(bmpPlayer,sx,48,16,16,g.pos.x-8,g.pos.y-8, 0);
+
+    }
 
     if(pl->moving) {
 
@@ -312,13 +397,17 @@ bool pl_hurt_collision(PLAYER* pl, int x, int y, int w, int h) {
     const float DIM = 6;
     if(p.x+DIM > x && p.x-DIM < x+w && p.y+DIM > y && p.y-DIM < y+h) {
 
-        pl->hurtTimer = true;
         VEC2 mid = vec2(x +w/2, y+ h/2);
 
         float angle = atan2(mid.y - p.y, mid.x - p.x);
 
-        pl->speed.x = 4.0f * cos(angle);
-        pl->speed.y = 4.0f * sin(angle);
+        pl->speed.x = -3.0f * cos(angle);
+        pl->speed.y = -3.0f * sin(angle);
+
+        pl->hurtTimer = 60.0f;
+        pl->moving = false;
+
+        get_status()->time -= 5 * 60.0f;
 
         return true;
     }
