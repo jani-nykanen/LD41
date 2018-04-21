@@ -14,6 +14,9 @@ ASSET_PACK* global_get_asset_pack();
 // Set cursor mode
 void set_cursor_mode(int m);
 
+// Get the cursor mode
+int get_cursor_mode();
+
 // Get the global scene
 SCENE global_get_scene();
 

@@ -43,7 +43,7 @@ static bool clip(BITMAP* bmp, int* dx, int* dy, int* sx, int* sy, int* sw, int* 
         
         *sh = gframe->height - *dy;
     }
-    else if(dy < 0) {
+    else if(*dy < 0) {
         
         *sy += -*dy;
         *sh += *dy;

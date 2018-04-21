@@ -6,3 +6,4 @@
 #include "../engine/graphics.h"
 #include "../engine/frame.h"
 #include "../engine/bitmap.h"
+#include "../engine/sprite.h"

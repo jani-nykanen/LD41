@@ -6,6 +6,7 @@
 
 #include "camera.h"
 #include "stage.h"
+#include "player.h"
 
 #include "../include/std.h"
 #include "../include/renderer.h"
@@ -13,12 +14,52 @@
 #include "../include/utility.h"
 
 #include "../global.h"
+#include "../keyconfig.h"
+
+// Constants
+static const int CANVAS_X = 12;
+static const int CANVAS_Y = 12;
 
 // Bitmaps
 static BITMAP* bmpFont;
 
 // Game canvas
 static BITMAP* gameCanvas;
+
+// Game objects
+static PLAYER pl;
+
+
+// Set the cursor mode
+static void game_set_cursor_mode() {
+
+    POINT cpos = input_get_cursor_pos();
+
+    cpos.x += 6;
+    cpos.y += 6;
+
+    int mode = 0;
+    if(cpos.x > CANVAS_X && cpos.x < CANVAS_X + gameCanvas->width && cpos.y < CANVAS_Y+12) {
+
+        mode = 1;
+    }
+    else if(cpos.x > CANVAS_X && cpos.x < CANVAS_X + gameCanvas->width 
+        && cpos.y > CANVAS_Y + gameCanvas->height-12) {
+
+        mode = 3;
+    }
+    else if(cpos.y > CANVAS_Y && cpos.y < CANVAS_Y + gameCanvas->height && cpos.x < CANVAS_X+12) {
+
+        mode = 4;
+    }
+    else if(cpos.y > CANVAS_Y && cpos.y < CANVAS_Y + gameCanvas->height 
+        && cpos.x > CANVAS_X + gameCanvas->width-12) {
+
+        mode = 2;
+    }
+
+    set_cursor_mode(mode);
+}
 
 
 // Initialize
@@ -38,6 +79,7 @@ static int game_init() {
     // Initialize components
     init_global_camera();
     stage_init(p);
+    pl = create_player(vec2(35*16, 28*16-8), p);
 
     return 0;
 }
@@ -46,8 +88,21 @@ static int game_init() {
 // Update
 static void game_update(float tm) {
 
-    // Update stage
-    stage_update(tm);
+    // Set cursor mode
+    game_set_cursor_mode();
+
+    // Update camera
+    update_camera(tm);
+
+    if(!get_global_camera()->moving) {
+
+        // Update player
+        pl_update(&pl, tm);
+
+        // Update stage
+        stage_update(tm);
+
+    }
 }
 
 
@@ -61,6 +116,9 @@ static void draw_to_canvas() {
 
     // Draw stage
     stage_draw();
+
+    // Draw player
+    pl_draw(&pl);
 }
 
 
@@ -77,8 +135,8 @@ static void game_draw() {
 
     // Draw canvas
     translate(0, 0);
-    int x = 320-236;
-    int y = 12;
+    int x = CANVAS_X;
+    int y = CANVAS_Y;
 
     fill_rect(x-3,y-3,gameCanvas->width +6, gameCanvas->height +6, 0b01101101);
     fill_rect(x-2,y-2,gameCanvas->width +4, gameCanvas->height +4, 255);

@@ -33,6 +33,13 @@ void set_cursor_mode(int m) {
 }
 
 
+// Get the cursor mode
+int get_cursor_mode() {
+
+    return cursorMode;
+}
+
+
 // Initialize
 static int global_init() {
 

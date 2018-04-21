@@ -6,11 +6,16 @@
 #define __CAMERA__
 
 #include "../include/renderer.h"
+#include "../include/std.h"
 
 // Camera type
 typedef struct {
 
     VEC2 pos;
+    POINT grid; // Grid position
+    POINT target; // Target grid
+    bool moving;
+    int step;
 }
 CAMERA;
 
@@ -22,5 +27,11 @@ CAMERA* get_global_camera();
 
 // Use global camera
 void use_global_camera();
+
+// Move the global camera
+void move_camera(int hdir, int vdir);
+
+// Update the camera
+void update_camera(float tm);
 
 #endif // __CAMERA__
