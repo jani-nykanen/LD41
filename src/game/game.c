@@ -39,7 +39,12 @@ static void game_set_cursor_mode() {
     cpos.y += 6;
 
     int mode = 0;
-    if(cpos.x > CANVAS_X && cpos.x < CANVAS_X + gameCanvas->width && cpos.y < CANVAS_Y+12) {
+
+    if(cpos.x >= 248-6) {
+
+        mode = 0;
+    }
+    else if(cpos.x > CANVAS_X && cpos.x < CANVAS_X + gameCanvas->width && cpos.y < CANVAS_Y+12) {
 
         mode = 1;
     }

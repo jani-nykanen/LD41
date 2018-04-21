@@ -48,7 +48,8 @@ static void pl_control(PLAYER* pl) {
 
 
     // Mouse button pressed
-    if(input_get_mouse_button(1) == STATE_PRESSED) {
+    if(input_get_cursor_pos().x < 248 && 
+        input_get_mouse_button(1) == STATE_PRESSED) {
 
         pl->tpos = vec2((float)cpos.x, (float)cpos.y);
         pl->moving = true;

@@ -26,18 +26,33 @@ static POINT tr;
 
 
 // Clip bitmap
-static bool clip(BITMAP* bmp, int* dx, int* dy, int* sx, int* sy, int* sw, int* sh) {
+static bool clip(BITMAP* bmp, int* dx, int* dy, int* sx, int* sy, int* sw, int* sh, int flip) {
 
     // Clip
+    int ow;
     if(*dx + *sw >= gframe->width) {
         
-        *sw = gframe->width - *dx;
+        ow = *sw;
+        *sw = (gframe->width-1 - *dx);
+
+        if((flip & FLIP_H) != 0) {
+
+            *sx += ow - *sw;
+
+        }
     }
-    else if(*dx <= 0) {
+    else if(*dx < 0) {
         
+        ow = *sw;
         *sx += -*dx;
         *sw += *dx;
         *dx = 0;
+
+        if((flip & FLIP_H) != 0) {
+
+            *sx += *sw -ow;
+
+        }
     }
     if(*dy + *sh >= gframe->height) {
         
@@ -184,7 +199,7 @@ void draw_bitmap_region(BITMAP* bmp, int sx, int sy, int sw, int sh,
     dy += tr.y;
 
     // Clip
-    if(!clip(bmp,&dx,&dy,&sx,&sy,&sw,&sh))
+    if(!clip(bmp,&dx,&dy,&sx,&sy,&sw,&sh, flip))
         return;
 
     bool hflip = (flip & FLIP_H) != 0;
@@ -263,7 +278,7 @@ void draw_bitmap_region_fast(BITMAP* bmp,
     dy += tr.y;
 
     // Clip
-    if(!clip(bmp,&dx,&dy,&sx,&sy,&sw,&sh))
+    if(!clip(bmp,&dx,&dy,&sx,&sy,&sw,&sh, 0))
         return;
 
     int offset = dy * gframe->width + dx;
