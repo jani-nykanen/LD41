@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "stage.h"
 #include "player.h"
+#include "status.h"
 
 #include "../include/std.h"
 #include "../include/renderer.h"
@@ -83,6 +84,7 @@ static int game_init() {
 
     // Initialize components
     init_global_camera();
+    reset_status();
 
     if(stage_init(p) == 1)
         return 1;
@@ -112,6 +114,9 @@ static void game_update(float tm) {
         stage_pl_collision(&pl, tm);
 
     }
+
+    // Update status
+    status_update(tm);
 }
 
 

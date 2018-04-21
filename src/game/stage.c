@@ -5,6 +5,7 @@
 #include "stage.h"
 
 #include "camera.h"
+#include "status.h"
 
 #include "../include/renderer.h"
 #include "../include/std.h"
@@ -86,6 +87,14 @@ static void draw_tilemap_area(TILEMAP* t, int sx, int sy, int ex, int ey) {
 }
 
 
+// Is tile not solid
+static bool is_not_solid(int t) {
+
+    STATUS* st = get_status();
+    return (t == 0 || t > 32 || (st->items[1] && (t == 7 || t == 23)));
+}
+
+
 // Initialize stage
 int stage_init(ASSET_PACK* ass) {
 
@@ -141,6 +150,13 @@ void stage_pl_collision(PLAYER* pl, float tm) {
     int w = mapBase->width;
     int h = mapBase->height;
 
+    bool col[4];
+    int i = 0;
+    for(; i < 4; ++ i)
+        col[i] = false;
+
+    STATUS* st = get_status();
+
     for(y=py-2; y <= py+2; ++ y) {
 
         for(x=px-2; x <= px+2; ++ x) {
@@ -149,24 +165,35 @@ void stage_pl_collision(PLAYER* pl, float tm) {
                 continue;
 
             tile = tiledata[y * w+x];
-            if(tile == 0 || tile > 32)
+            if(is_not_solid(tile))
                 continue;
 
             t2 = y > 0? tiledata[(y-1)*w+x] : 0;
-            if(t2 == 0 || t2 > 32)
-                pl_surface_collision(pl, COL_DOWN, x*16, y*16, 16, tm);
+            if(is_not_solid(t2))
+                col[0] = pl_surface_collision(pl, COL_DOWN, x*16, y*16, 16, tm);
 
             t2 = y < h-1? tiledata[(y+1)*w+x] : 0;
-            if(t2 == 0 || t2 > 32)
-                pl_surface_collision(pl, COL_UP, x*16, y*16 +16, 16, tm);
+            if(is_not_solid(t2))
+                col[1] = pl_surface_collision(pl, COL_UP, x*16, y*16 +16, 16, tm);
 
             t2 = x > 0 ? tiledata[y*w+x-1] : 0;
-            if(t2 == 0 || t2 > 32)
-                pl_surface_collision(pl, COL_RIGHT, x*16, y*16, 16, tm);
+            if(is_not_solid(t2))
+                col[2] = pl_surface_collision(pl, COL_RIGHT, x*16, y*16, 16, tm);
 
             t2 = x < w-1 ? tiledata[y*w+x+1] : 0;
-            if(t2 == 0 || t2 > 32)
-                pl_surface_collision(pl, COL_LEFT, x*16+16, y*16, 16, tm);
+            if(is_not_solid(t2))
+                col[3] = pl_surface_collision(pl, COL_LEFT, x*16+16, y*16, 16, tm);
+
+            if( (st->items[0] && tile == 22) || (st->items[3] && tile == 24) ) {
+
+                for(i=0; i < 4; ++i) {
+
+                    if(col[i]) {
+
+                        tiledata[y*w+x] = 0;
+                    }
+                }
+            }
             
         }
     }

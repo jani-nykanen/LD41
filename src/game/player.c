@@ -230,7 +230,7 @@ void pl_draw(PLAYER* pl) {
 
 
 // Surface collision
-void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
+bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
 
     VEC2 p = pl->pos;
     const int DIM = 6;
@@ -245,6 +245,8 @@ void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
 
             pl->pos.y = y - DIM;
             pl->speed.y = 0.0f;
+
+            return true;
         }
     }
     break;
@@ -257,6 +259,8 @@ void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
 
             pl->pos.y = y + DIM;
             pl->speed.y = 0.0f;
+
+            return true;
         }
     }
     break;
@@ -269,6 +273,8 @@ void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
 
             pl->pos.x = x - DIM;
             pl->speed.x = 0.0f;
+
+            return true;
         }
     }
     break;
@@ -281,6 +287,8 @@ void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
 
             pl->pos.x = x + DIM;
             pl->speed.x = 0.0f;
+
+            return true;
         }
     }
     break;
@@ -288,5 +296,7 @@ void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
     default:
         break;
     }
+
+    return false;
 
 }

@@ -47,6 +47,6 @@ void pl_update(PLAYER* pl, float tm);
 void pl_draw(PLAYER* pl);
 
 // Surface collision
-void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm);
+bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm);
 
 #endif // __PLAYER__
