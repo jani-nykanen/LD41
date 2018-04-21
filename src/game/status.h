@@ -29,4 +29,7 @@ void status_update(float tm);
 // Get status
 STATUS* get_status();
 
+// Get time string
+void status_get_time_string(char* str);
+
 #endif // __STATUS__

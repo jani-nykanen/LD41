@@ -8,9 +8,9 @@
 #include "stage.h"
 #include "player.h"
 #include "status.h"
+#include "item.h"
 
 #include "../include/std.h"
-#include "../include/renderer.h"
 #include "../include/system.h"
 #include "../include/utility.h"
 
@@ -20,15 +20,18 @@
 // Constants
 static const int CANVAS_X = 12;
 static const int CANVAS_Y = 12;
+#define  ITEM_COUNT 64
 
 // Bitmaps
 static BITMAP* bmpFont;
+static BITMAP* bmpGem;
 
 // Game canvas
 static BITMAP* gameCanvas;
 
 // Game objects
 static PLAYER pl;
+static ITEM items[ITEM_COUNT];
 
 
 // Set the cursor mode
@@ -74,6 +77,7 @@ static int game_init() {
     // Get assets
     ASSET_PACK* p = global_get_asset_pack();
     bmpFont = (BITMAP*)assets_get(p, "font");
+    bmpGem = (BITMAP*)assets_get(p, "gem");
 
     // Create canvas
     gameCanvas = bitmap_create(224, 176);
@@ -85,11 +89,18 @@ static int game_init() {
     // Initialize components
     init_global_camera();
     reset_status();
+    init_items(p);
+
+    pl = create_player(vec2(35*16, 28*16-8), p);
+
+    int i = 0;
+    for(; i < ITEM_COUNT; ++ i) {
+
+        items[i].exist = false;
+    }
 
     if(stage_init(p) == 1)
         return 1;
-
-    pl = create_player(vec2(35*16, 28*16-8), p);
 
     return 0;
 }
@@ -113,6 +124,13 @@ static void game_update(float tm) {
         stage_update(tm);
         stage_pl_collision(&pl, tm);
 
+        // Update items
+        int i = 0;
+        for(; i < ITEM_COUNT; ++ i) {
+
+            item_update(&items[i], &pl, tm);
+        }
+
     }
 
     // Update status
@@ -129,11 +147,45 @@ static void draw_to_canvas() {
     use_global_camera();
 
     // Draw stage
-    stage_draw();
+    stage_draw(pl.pos);
+
+    // Draw items
+    int i = 0;
+    for(; i < ITEM_COUNT; ++ i) {
+
+        item_draw(&items[i]);
+    }
 
     // Draw player
     pl_draw(&pl);
 
+}
+
+
+// Draw status
+static void draw_status() {
+
+    // Draw time
+    char str[16];
+    status_get_time_string(str);
+    draw_text(bmpFont, str, 264,93,-8,0, false);
+
+    // Draw icons
+    draw_bitmap_region(bmpGem,0,32,16,16,248,92, 0);
+    draw_bitmap_region(bmpGem,0,48,16,16,248,92 + 24, 0);
+    draw_bitmap_region(bmpGem,0,16,16,16,248,92 + 48, 0);
+    draw_bitmap_region(bmpGem,0,0,16,16,248,92 + 72, 0);
+
+    // Draw amounts
+    STATUS* st = get_status();
+    snprintf(str,16,"x%d",st->ammo);
+    draw_text(bmpFont, str, 264,93 +24,-7,0, false);
+
+    snprintf(str,16,"%d/8",st->blueCount);
+    draw_text(bmpFont, str, 264,93 +48,-7,0, false);
+
+    snprintf(str,16,"%d/4",st->redCount);
+    draw_text(bmpFont, str, 264,93 +72,-7,0, false);
 }
 
 
@@ -161,6 +213,9 @@ static void game_draw() {
     // Draw map
     draw_text(bmpFont,"MAP:",320-72 +24,8,-7,0,true);
     stage_draw_map(320-72 +4,12 +12, pl.pos);
+
+    draw_status();
+    
 }
 
 
@@ -182,4 +237,21 @@ SCENE game_get_scene() {
     return scene_create(
         game_init,game_update,game_draw,game_destroy,game_on_change,
         "game");
+}
+
+
+// Add an item
+void add_item(POINT p, int type) {
+
+    int i = 0;
+    ITEM* it;
+    for(; i < ITEM_COUNT; ++ i) {
+
+        it = &items[i];
+        if(!it->exist) {
+
+            *it = create_item(p, type);
+            return;
+        }
+    }
 }

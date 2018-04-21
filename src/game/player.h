@@ -34,6 +34,7 @@ typedef struct {
     SPRITE tspr;
     SPRITE pspr;
     float pspeed;
+    float hurtTimer;
 }
 PLAYER;
 
@@ -48,5 +49,8 @@ void pl_draw(PLAYER* pl);
 
 // Surface collision
 bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm);
+
+// Hurt collision
+bool pl_hurt_collision(PLAYER* pl, int x, int y, int w, int h);
 
 #endif // __PLAYER__

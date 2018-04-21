@@ -6,6 +6,7 @@
 
 #include "camera.h"
 #include "status.h"
+#include "game.h"
 
 #include "../include/renderer.h"
 #include "../include/std.h"
@@ -74,7 +75,7 @@ static void draw_tilemap_area(TILEMAP* t, int sx, int sy, int ex, int ey) {
                 continue;
 
             tile = tiledata[y*t->width + x];
-            if(tile == 0) continue;
+            if(tile == 0 || tile > 32) continue;
 
             -- tile;
 
@@ -92,6 +93,28 @@ static bool is_not_solid(int t) {
 
     STATUS* st = get_status();
     return (t == 0 || t > 32 || (st->items[1] && (t == 7 || t == 23)));
+}
+
+
+// Add items
+static void add_items() {
+
+    int x,y;
+    int t;
+    for(y = 0; y < mapBase->height; ++ y) {
+
+        for(x = 0; x < mapBase->width; ++ x) {
+
+            t = tiledata[y*mapBase->width + x];
+            if(t > 32 && t <= 39) {
+
+                add_item(point(x,y), t-33);
+            }
+
+        }
+
+    }
+
 }
 
 
@@ -126,6 +149,9 @@ int stage_init(ASSET_PACK* ass) {
 
         return 1;
     }
+
+    // Add items
+    add_items();
 
     return 0;
 }
@@ -201,7 +227,7 @@ void stage_pl_collision(PLAYER* pl, float tm) {
 
 
 // Draw stage
-void stage_draw() {
+void stage_draw(VEC2 p) {
 
     // Get camera pos
     CAMERA* c = get_global_camera();
@@ -213,6 +239,28 @@ void stage_draw() {
 
     // Draw tilemap area
     draw_tilemap_area(mapBase,sx,sy,ex,ey);
+
+    if( (c->target.x == 0 && c->target.y == 0) || (c->grid.x == 0 && c->grid.y == 0) ) {
+        
+        int x = 0;
+        int y = 0;
+
+        if(!get_status()->items[1]) {
+
+            fill_rect(x,y,224,176, 0);
+        }
+        else {
+
+            fill_rect(x,y,(int)p.x - 32 - x,176, 0);
+            fill_rect((int)p.x + 32,y,x + 224 - (int)p.x + 32,176, 0);
+            fill_rect(x,y,224,(int)p.y - 32 - y, 0);
+            fill_rect(x,(int)p.y + 32,224,y + 176 - (int)p.y + 32, 0);
+
+            draw_bitmap_region(bmpTileset,256-64,0,64,64, (int)p.x-32,(int)p.y-32, 0);
+        }
+
+    }
+
 }
 
 

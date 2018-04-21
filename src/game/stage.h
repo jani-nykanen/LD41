@@ -19,7 +19,7 @@ void stage_update(float tm);
 void stage_pl_collision(PLAYER* pl, float tm);
 
 // Draw stage
-void stage_draw();
+void stage_draw(VEC2 p);
 
 // Draw map
 void stage_draw_map(int x, int y, VEC2 ppos);

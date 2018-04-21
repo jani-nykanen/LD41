@@ -116,7 +116,7 @@ static void pl_move(PLAYER* pl, float tm) {
 // Animate
 static void pl_animate(PLAYER* pl, float tm) {
 
-    const float PSPEED = 16.0f;
+    const float PSPEED = 14.0f;
 
     pl->flip = pl->moving ? (pl->tpos.x < pl->pos.x ? 1 : 0) : pl->flip;
 
@@ -126,7 +126,7 @@ static void pl_animate(PLAYER* pl, float tm) {
 
         if(pl->pspeed < PSPEED) {
 
-            pl->pspeed += 0.5f * tm;
+            pl->pspeed += 0.35f * tm;
             if(pl->pspeed > PSPEED) {
 
                 pl->pspeed = PSPEED;
@@ -137,7 +137,7 @@ static void pl_animate(PLAYER* pl, float tm) {
 
         if(pl->pspeed > 0.0f) {
 
-            pl->pspeed -= 0.5f * tm;
+            pl->pspeed -= 0.35f * tm;
             if(pl->pspeed < 0.0f)
                 pl->pspeed = 0.0f;
         }
@@ -196,6 +196,7 @@ PLAYER create_player(VEC2 pos, ASSET_PACK* ass) {
     pl.pspr.row = 2;
     pl.flip = FLIP_NONE;
     pl.pspeed = 0.0f;
+    pl.hurtTimer = 0.0f;
 
     if(ass != NULL) {
 
@@ -240,7 +241,7 @@ bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
     case COL_DOWN:
     {
 
-        if(p.x+DIM > x && p.x-DIM < x+d 
+        if(p.x+DIM >= x && p.x-DIM <= x+d 
         && pl->speed.y > 0.0f && p.y+DIM > y-1*tm && p.y+DIM < y+8+pl->speed.y*tm) {
 
             pl->pos.y = y - DIM;
@@ -254,7 +255,7 @@ bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
     case COL_UP:
     {
 
-        if(p.x+DIM > x && p.x-DIM < x+d 
+        if(p.x+DIM >= x && p.x-DIM <= x+d 
         && pl->speed.y < 0.0f && p.y-DIM < y+tm && p.y-DIM > y-8+pl->speed.y*tm) {
 
             pl->pos.y = y + DIM;
@@ -268,7 +269,7 @@ bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
     case COL_RIGHT:
     {
 
-        if(p.y+DIM > y && p.y-DIM < y+d 
+        if(p.y+DIM >= y && p.y-DIM <= y+d 
         && pl->speed.x > 0.0f && p.x+DIM > x-tm && p.x+DIM < x+8+pl->speed.x*tm) {
 
             pl->pos.x = x - DIM;
@@ -282,7 +283,7 @@ bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
     case COL_LEFT:
     {
 
-        if(p.y+DIM > y && p.y-DIM < y+d 
+        if(p.y+DIM >= y && p.y-DIM <= y+d 
         && pl->speed.x < 0.0f && p.x-DIM < x+tm && p.x-DIM > x-8+pl->speed.x*tm) {
 
             pl->pos.x = x + DIM;
@@ -299,4 +300,28 @@ bool pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
 
     return false;
 
+}
+
+
+// Hurt collision
+bool pl_hurt_collision(PLAYER* pl, int x, int y, int w, int h) {
+
+    if(pl->hurtTimer > 0.0f) return false;
+
+    VEC2 p = pl->pos;
+    const float DIM = 6;
+    if(p.x+DIM > x && p.x-DIM < x+w && p.y+DIM > y && p.y-DIM < y+h) {
+
+        pl->hurtTimer = true;
+        VEC2 mid = vec2(x +w/2, y+ h/2);
+
+        float angle = atan2(mid.y - p.y, mid.x - p.x);
+
+        pl->speed.x = 4.0f * cos(angle);
+        pl->speed.y = 4.0f * sin(angle);
+
+        return true;
+    }
+
+    return false;
 }
