@@ -13,9 +13,46 @@
 
 // Bitmaps
 static BITMAP* bmpTileset;
+static BITMAP* bmpMap =NULL;
 
 // Tilemap
 static TILEMAP* mapBase;
+
+// Tile data
+static int* tiledata =NULL;
+
+
+
+// Generate map
+static int gen_map() {
+
+    if(bmpMap == NULL) {
+
+        bmpMap = bitmap_create(mapBase->width, mapBase->height);
+        if(bmpMap == NULL) {
+
+            return 1;
+        }
+    }
+
+    int i = 0;
+    int v = 0;
+    for(; i < mapBase->width*mapBase->height; ++ i) {
+
+        v = tiledata[i];
+        if(v == 0 || v > 32) {
+
+            bmpMap->data[i] = 255;
+        }
+        else {
+
+            bmpMap->data[i] = 0;
+        }
+
+    }
+
+    return 0;
+}
 
 
 // Draw tilemap area
@@ -35,7 +72,7 @@ static void draw_tilemap_area(TILEMAP* t, int sx, int sy, int ex, int ey) {
             if(x < 0 || y < 0 || x >= t->width || y >= t->height)
                 continue;
 
-            tile = t->layers[0][y*t->width + x];
+            tile = tiledata[y*t->width + x];
             if(tile == 0) continue;
 
             -- tile;
@@ -50,18 +87,89 @@ static void draw_tilemap_area(TILEMAP* t, int sx, int sy, int ex, int ey) {
 
 
 // Initialize stage
-void stage_init(ASSET_PACK* ass) {
+int stage_init(ASSET_PACK* ass) {
 
     // Get assets
     bmpTileset = (BITMAP*)assets_get(ass, "tileset");
 
     mapBase = (TILEMAP*)assets_get(ass, "base");
+    if(tiledata != NULL)
+        free(tiledata);
+
+    if(tiledata == NULL)
+        tiledata = (int*)malloc(sizeof(int) * mapBase->width * mapBase->height);
+
+    if(tiledata == NULL) {
+
+        error_mem_alloc();
+        return 1;
+    }
+
+    // Copy
+    int i = 0;
+    for(; i < mapBase->width * mapBase->height; ++ i) {
+
+        tiledata[i] = mapBase->layers[0][i];
+    }
+
+    // Generate map
+    if(gen_map() == 1) {
+
+        return 1;
+    }
+
+    return 0;
 }
 
 
 // Update stage
 void stage_update(float tm) {
 
+}
+
+
+// Player collision
+void stage_pl_collision(PLAYER* pl, float tm) {
+
+    int px = (int)floor(pl->pos.x / 16.0);
+    int py = (int)floor(pl->pos.y / 16.0);
+
+    int x,y;
+    int tile;
+    int t2;
+
+    int w = mapBase->width;
+    int h = mapBase->height;
+
+    for(y=py-2; y <= py+2; ++ y) {
+
+        for(x=px-2; x <= px+2; ++ x) {
+
+            if(x < 0 || y < 0 || x >= mapBase->width || y >= mapBase->height)
+                continue;
+
+            tile = tiledata[y * w+x];
+            if(tile == 0 || tile > 32)
+                continue;
+
+            t2 = y > 0? tiledata[(y-1)*w+x] : 0;
+            if(t2 == 0 || t2 > 32)
+                pl_surface_collision(pl, COL_DOWN, x*16, y*16, 16, tm);
+
+            t2 = y < h-1? tiledata[(y+1)*w+x] : 0;
+            if(t2 == 0 || t2 > 32)
+                pl_surface_collision(pl, COL_UP, x*16, y*16 +16, 16, tm);
+
+            t2 = x > 0 ? tiledata[y*w+x-1] : 0;
+            if(t2 == 0 || t2 > 32)
+                pl_surface_collision(pl, COL_RIGHT, x*16, y*16, 16, tm);
+
+            t2 = x < w-1 ? tiledata[y*w+x+1] : 0;
+            if(t2 == 0 || t2 > 32)
+                pl_surface_collision(pl, COL_LEFT, x*16+16, y*16, 16, tm);
+            
+        }
+    }
 }
 
 
@@ -78,4 +186,19 @@ void stage_draw() {
 
     // Draw tilemap area
     draw_tilemap_area(mapBase,sx,sy,ex,ey);
+}
+
+
+// Draw map
+void stage_draw_map(int x, int y, VEC2 p) {
+
+    fill_rect(x-2,y-2,bmpMap->width+4,bmpMap->height+4, 0b01101101);
+    fill_rect(x-1,y-1,bmpMap->width+2,bmpMap->height+2, 255);
+    draw_bitmap_fast(bmpMap, x, y);
+
+    // Player
+    int px = (int)floor(p.x / 16.0f);
+    int py = (int)floor(p.y / 16.0f);
+
+    fill_rect(x +px-1, y+py-1,3,3, 0b11100000);
 }

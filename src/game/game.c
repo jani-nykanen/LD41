@@ -83,7 +83,10 @@ static int game_init() {
 
     // Initialize components
     init_global_camera();
-    stage_init(p);
+
+    if(stage_init(p) == 1)
+        return 1;
+
     pl = create_player(vec2(35*16, 28*16-8), p);
 
     return 0;
@@ -106,6 +109,7 @@ static void game_update(float tm) {
 
         // Update stage
         stage_update(tm);
+        stage_pl_collision(&pl, tm);
 
     }
 }
@@ -124,6 +128,7 @@ static void draw_to_canvas() {
 
     // Draw player
     pl_draw(&pl);
+
 }
 
 
@@ -147,6 +152,10 @@ static void game_draw() {
     fill_rect(x-2,y-2,gameCanvas->width +4, gameCanvas->height +4, 255);
     fill_rect(x-1,y-1,gameCanvas->width +2, gameCanvas->height +2, 0);
     draw_bitmap_fast(gameCanvas, x,y);
+
+    // Draw map
+    draw_text(bmpFont,"MAP:",320-72 +24,8,-7,0,true);
+    stage_draw_map(320-72 +4,12 +12, pl.pos);
 }
 
 

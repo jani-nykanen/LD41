@@ -116,7 +116,35 @@ static void pl_move(PLAYER* pl, float tm) {
 // Animate
 static void pl_animate(PLAYER* pl, float tm) {
 
+    const float PSPEED = 16.0f;
+
     pl->flip = pl->moving ? (pl->tpos.x < pl->pos.x ? 1 : 0) : pl->flip;
+
+    if(pl->moving) {
+
+        spr_animate(&pl->tspr,0,0,3, 8, tm);
+
+        if(pl->pspeed < PSPEED) {
+
+            pl->pspeed += 0.5f * tm;
+            if(pl->pspeed > PSPEED) {
+
+                pl->pspeed = PSPEED;
+            }
+        }
+    }
+    else {
+
+        if(pl->pspeed > 0.0f) {
+
+            pl->pspeed -= 0.5f * tm;
+            if(pl->pspeed < 0.0f)
+                pl->pspeed = 0.0f;
+        }
+    }
+
+    if(pl->pspeed > 0.0f)
+        spr_animate(&pl->pspr,2,0,3, 18 - pl->pspeed, tm);
 }
 
 
@@ -162,7 +190,12 @@ PLAYER create_player(VEC2 pos, ASSET_PACK* ass) {
     pl.tpos = pl.pos;
     pl.moving = false;
     pl.spr = create_sprite(16, 16);
+    pl.spr.row = 1;
+    pl.tspr = create_sprite(16,16);
+    pl.pspr = create_sprite(16,16);
+    pl.pspr.row = 2;
     pl.flip = FLIP_NONE;
+    pl.pspeed = 0.0f;
 
     if(ass != NULL) {
 
@@ -186,5 +219,74 @@ void pl_update(PLAYER* pl, float tm) {
 // Draw player
 void pl_draw(PLAYER* pl) {
 
+    if(pl->moving) {
+
+        spr_draw(&pl->tspr, bmpPlayer, (int)round(pl->tpos.x)-8, (int)round(pl->tpos.y)-8, 0);
+    }
+
     spr_draw(&pl->spr, bmpPlayer, (int)round(pl->pos.x)-8, (int)round(pl->pos.y)-8, pl->flip);
+    spr_draw(&pl->pspr, bmpPlayer, (int)round(pl->pos.x)-8, (int)round(pl->pos.y)-8-16, pl->flip);
+}
+
+
+// Surface collision
+void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm) {
+
+    VEC2 p = pl->pos;
+    const int DIM = 6;
+
+    switch(type) {
+
+    case COL_DOWN:
+    {
+
+        if(p.x+DIM > x && p.x-DIM < x+d 
+        && pl->speed.y > 0.0f && p.y+DIM > y-1*tm && p.y+DIM < y+8+pl->speed.y*tm) {
+
+            pl->pos.y = y - DIM;
+            pl->speed.y = 0.0f;
+        }
+    }
+    break;
+
+    case COL_UP:
+    {
+
+        if(p.x+DIM > x && p.x-DIM < x+d 
+        && pl->speed.y < 0.0f && p.y-DIM < y+tm && p.y-DIM > y-8+pl->speed.y*tm) {
+
+            pl->pos.y = y + DIM;
+            pl->speed.y = 0.0f;
+        }
+    }
+    break;
+    
+    case COL_RIGHT:
+    {
+
+        if(p.y+DIM > y && p.y-DIM < y+d 
+        && pl->speed.x > 0.0f && p.x+DIM > x-tm && p.x+DIM < x+8+pl->speed.x*tm) {
+
+            pl->pos.x = x - DIM;
+            pl->speed.x = 0.0f;
+        }
+    }
+    break;
+
+    case COL_LEFT:
+    {
+
+        if(p.y+DIM > y && p.y-DIM < y+d 
+        && pl->speed.x < 0.0f && p.x-DIM < x+tm && p.x-DIM > x-8+pl->speed.x*tm) {
+
+            pl->pos.x = x + DIM;
+            pl->speed.x = 0.0f;
+        }
+    }
+    break;
+
+    default:
+        break;
+    }
+
 }

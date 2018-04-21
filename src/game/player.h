@@ -9,6 +9,15 @@
 #include "../include/renderer.h"
 #include "../include/std.h"
 
+// Collision types
+enum {
+
+    COL_RIGHT = 0,
+    COL_UP = 1,
+    COL_LEFT = 2,
+    COL_DOWN = 3,
+};
+
 // Player
 typedef struct {
 
@@ -22,6 +31,9 @@ typedef struct {
     int flip;
 
     SPRITE spr;
+    SPRITE tspr;
+    SPRITE pspr;
+    float pspeed;
 }
 PLAYER;
 
@@ -33,5 +45,8 @@ void pl_update(PLAYER* pl, float tm);
 
 // Draw player
 void pl_draw(PLAYER* pl);
+
+// Surface collision
+void pl_surface_collision(PLAYER* pl, int type, int x, int y, int d, float tm);
 
 #endif // __PLAYER__

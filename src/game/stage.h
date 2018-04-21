@@ -7,13 +7,21 @@
 
 #include "../include/system.h"
 
+#include "player.h"
+
 // Initialize stage
-void stage_init(ASSET_PACK* ass);
+int stage_init(ASSET_PACK* ass);
 
 // Update stage
 void stage_update(float tm);
 
+// Player collision
+void stage_pl_collision(PLAYER* pl, float tm);
+
 // Draw stage
 void stage_draw();
+
+// Draw map
+void stage_draw_map(int x, int y, VEC2 ppos);
 
 #endif // __STAGE__
