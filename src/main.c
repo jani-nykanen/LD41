@@ -8,6 +8,8 @@
 #include "game/game.h"
 #include "global.h"
 #include "ending.h"
+#include "creator.h"
+#include "title.h"
 
 // Main
 int main(int argc, char** argv) {
@@ -16,6 +18,8 @@ int main(int argc, char** argv) {
     core_add_scene(global_get_scene());
     core_add_scene(get_ending_scene());
     core_add_scene(game_get_scene());
+    core_add_scene(get_title_scene());
+    core_add_scene(get_creator_scene());
     
     return core_run_application("properties.conf");
 }

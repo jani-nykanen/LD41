@@ -12,7 +12,7 @@
 
 // Constants
 static const float END_PHASE = 60.0f;
-static const float PHASE_COUNT = 7;
+static const float PHASE_COUNT = 3;
 
 // Font
 static BITMAP* bmpFont;
@@ -50,7 +50,7 @@ static void end_update(float tm) {
 
     endTimer += 1.0f * tm;
 
-    if(endPhase < PHASE_COUNT+3 && endTimer >= END_PHASE) {
+    if(endPhase < PHASE_COUNT+6 && endTimer >= END_PHASE) {
 
         endTimer -= END_PHASE;
         ++ endPhase;
@@ -63,7 +63,7 @@ static void end_update(float tm) {
 
     if(endPhase >= PHASE_COUNT) {
 
-        if(endPhase == PHASE_COUNT + 3 || ( !is_fading() && input_get_mouse_button(1) == STATE_PRESSED) ) {
+        if(endPhase == PHASE_COUNT + 6 || ( !is_fading() && input_get_mouse_button(1) == STATE_PRESSED) ) {
 
             fade(1,2.0f, swap_to_game);
         }
@@ -93,16 +93,11 @@ static void end_draw() {
     if(endPhase >= 2) {
 
         draw_text(bmpFont, "CONGRATULATIONS!",160,32, -7,0, true);
-    }
-    if(endPhase >= 4) {
 
         draw_text(bmpFont, "You used the teleporter to escape",160,56, -7,0, true);
         draw_text(bmpFont, "the caverns. You was teleported",160,68, -7,0, true);
         draw_text(bmpFont, "back to your home planet where",160,80, -7,0, true);
         draw_text(bmpFont, "a pack of wolves killed you.",160,92, -7,0, true);
-        
-    }
-    if(endPhase >= 7) {
 
         draw_text(bmpFont, "THE END",160,128, -7,0, true);
     }

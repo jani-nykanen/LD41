@@ -23,6 +23,8 @@
 static const int CANVAS_X = 12;
 static const int CANVAS_Y = 12;
 static const float GOVER_MAX = 150.0f;
+static const int BUTTON_X = 320-36;
+static const int BUTTON_Y = 200-36;
 #define  ITEM_COUNT 64
 #define ENEMY_COUNT 64
 #define SPLASH_COUNT 8
@@ -33,6 +35,7 @@ static BITMAP* bmpGem;
 static BITMAP* bmpTimesUp;
 static BITMAP* bmpSplash;
 static BITMAP* bmpGuide;
+static BITMAP* bmpButton;
 
 // Game canvas
 static BITMAP* gameCanvas;
@@ -62,6 +65,9 @@ static bool guideShown;
 static float guideTimer;
 // Guide phase
 static int guidePhase;
+
+// Button overlay
+static bool buttonOverlay;
 
 
 // Draw guide
@@ -178,6 +184,28 @@ static void draw_game_over() {
 }
 
 
+// Swap to title
+static void swap_to_title() {
+
+    core_swap_scene("title");
+}
+
+
+// Button event
+static void button_event() {
+
+    POINT cpos = input_get_cursor_pos();
+
+    buttonOverlay = cpos.x >= BUTTON_X && cpos.x <= BUTTON_X + 24
+        && cpos.y >= BUTTON_Y && cpos.y <= BUTTON_Y + 24;
+
+    if(buttonOverlay && input_get_mouse_button(1) == STATE_PRESSED) {
+
+        fade(1,2.0f, swap_to_title);
+    }
+}
+
+
 // Set the cursor mode
 static void game_set_cursor_mode() {
 
@@ -242,6 +270,7 @@ static int game_init() {
     bmpTimesUp = (BITMAP*)assets_get(p,"timeup");
     bmpSplash = (BITMAP*)assets_get(p,"splash");
     bmpGuide = (BITMAP*)assets_get(p,"guide");
+    bmpButton = (BITMAP*)assets_get(p,"button");
 
     // Create canvas
     gameCanvas = bitmap_create(224, 176);
@@ -291,9 +320,12 @@ static void game_update(float tm) {
     // Quit
     else if(get_action_state(ACTION_ESCAPE) == STATE_PRESSED) {
 
-        fade(1,2.0f,core_terminate);
+        fade(1,2.0f,swap_to_title);
     }
     if(paused || is_fading()) return;
+
+    // Button event
+    button_event();
 
     // Set cursor mode
     game_set_cursor_mode();
@@ -454,24 +486,24 @@ static void draw_status() {
     status_get_time_string(str);
 
     if(pl.hurtTimer <= 0 || pl.spr.frame == 0)
-        draw_text(bmpFont, str, 264,93,-8,0, false);
+        draw_text(bmpFont, str, 264,85,-8,0, false);
 
     // Draw icons
-    draw_bitmap_region(bmpGem,0,32,16,16,248,92, 0);
-    draw_bitmap_region(bmpGem,0,48,16,16,248,92 + 24, 0);
-    draw_bitmap_region(bmpGem,0,16,16,16,248,92 + 48, 0);
-    draw_bitmap_region(bmpGem,0,0,16,16,248,92 + 72, 0);
+    draw_bitmap_region(bmpGem,0,32,16,16,248,84, 0);
+    draw_bitmap_region(bmpGem,0,48,16,16,248,84 + 20, 0);
+    draw_bitmap_region(bmpGem,0,16,16,16,248,84 + 40, 0);
+    draw_bitmap_region(bmpGem,0,0,16,16,248,84 + 60, 0);
 
     // Draw amounts
     STATUS* st = get_status();
     snprintf(str,16,"x%d",st->ammo);
-    draw_text(bmpFont, str, 264,93 +24,-7,0, false);
+    draw_text(bmpFont, str, 264,85 +20,-7,0, false);
 
     snprintf(str,16,"%d/8",st->blueCount);
-    draw_text(bmpFont, str, 264,93 +48,-7,0, false);
+    draw_text(bmpFont, str, 264,85 +40,-7,0, false);
 
     snprintf(str,16,"%d/4",st->redCount);
-    draw_text(bmpFont, str, 264,93 +72,-7,0, false);
+    draw_text(bmpFont, str, 264,85 +60,-7,0, false);
 }
 
 
@@ -501,6 +533,9 @@ static void game_draw() {
     stage_draw_map(320-72 +4,12 +12, pl.pos);
 
     draw_status();
+
+    // Draw button
+    draw_bitmap_region_fast(bmpButton, buttonOverlay ? 24 : 0,0,24,24, BUTTON_X, BUTTON_Y);
 
     // If game over, draw "Time's Up!"
     if(gameOver) {
