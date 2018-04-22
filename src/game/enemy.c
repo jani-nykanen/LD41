@@ -121,7 +121,7 @@ void enemy_update(ENEMY* e, PLAYER* pl, float tm) {
     if(inside_triangle(tx,ty, e->x1,e->y1,e->x2,e->y2,e->x3,e->y3)) {
 
         set_cursor_mode(5);
-        if(!is_shooting() && input_get_mouse_button(3) == STATE_PRESSED) {
+        if(can_shoot() && input_get_mouse_button(3) == STATE_PRESSED) {
 
             e->dead = true;
         }

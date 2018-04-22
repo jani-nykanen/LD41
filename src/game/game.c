@@ -10,6 +10,7 @@
 #include "status.h"
 #include "item.h"
 #include "enemy.h"
+#include "splash.h"
 
 #include "../include/std.h"
 #include "../include/system.h"
@@ -24,6 +25,7 @@ static const int CANVAS_Y = 12;
 static const float GOVER_MAX = 150.0f;
 #define  ITEM_COUNT 64
 #define ENEMY_COUNT 64
+#define SPLASH_COUNT 8
 
 // Bitmaps
 static BITMAP* bmpFont;
@@ -38,6 +40,7 @@ static BITMAP* gameCanvas;
 static PLAYER pl;
 static ITEM items[ITEM_COUNT];
 static ENEMY enemies[ENEMY_COUNT];
+static SPLASH splashes[SPLASH_COUNT];
 
 // Item text timer
 static float itemTextTimer;
@@ -48,11 +51,6 @@ static int itemTextID;
 static bool gameOver;
 // Game over timer
 static float goverTimer;
-
-// Splash sprite
-static SPRITE sprSplash;
-// Splash pos
-static POINT splashPos;
 
 
 // Reset game
@@ -77,15 +75,17 @@ static int game_reset(ASSET_PACK* ass) {
         enemies[i].exist = false;
     }
 
+    for(i=0; i < SPLASH_COUNT; ++ i) {
+
+        splashes[i].exist = false;
+    }
+
     if(stage_init(ass) == 1)
         return 1;
 
     // Set default values
     gameOver = false;
     goverTimer = 0.0f;
-
-    sprSplash = create_sprite(16,16);
-    sprSplash.frame = 6;
 
     return 0;
 }
@@ -183,6 +183,7 @@ static int game_init() {
 
     // Initialize components
     init_items(p);
+    init_splash(p);
     
     game_reset(p);
 
@@ -242,6 +243,11 @@ static void game_update(float tm) {
         enemy_update(&enemies[i], &pl, tm);
     }
 
+    // Update splashes
+    for(i=0; i < SPLASH_COUNT; ++ i) {
+
+        splash_update(&splashes[i], tm);
+    }
 
     // Update item text
     if(itemTextTimer > 0.0f) {
@@ -249,22 +255,22 @@ static void game_update(float tm) {
         itemTextTimer -= 1.0f * tm;
     }
 
-    // Splash!
-    if(sprSplash.frame < 6) {
-
-        spr_animate(&sprSplash,0,0,6, 2, tm);
-    }
-    else if(get_status()->ammo > 0 && input_get_mouse_button(3) == STATE_PRESSED) {
+    // Shoot
+    if(get_status()->ammo > 0 && input_get_mouse_button(3) == STATE_PRESSED) {
 
         POINT c = input_get_cursor_pos();
         if(c.x >= CANVAS_X && c.x <= CANVAS_X + gameCanvas->width
          && c.y >= CANVAS_Y && c.y <= CANVAS_Y + gameCanvas->height) {
           
-            splashPos.x = c.x - CANVAS_X;
-            splashPos.y = c.y - CANVAS_Y;
+            int i = 0;
+            for(; i < SPLASH_COUNT; ++ i) {
 
-            sprSplash.frame = 0;
-            sprSplash.count = 0.0f;
+                if(!splashes[i].exist) {
+                    
+                    splashes[i] = create_splash(vec2(c.x-CANVAS_X, c.y-CANVAS_Y));
+                    break;
+                }
+            }
 
             -- get_status()->ammo;
 
@@ -294,14 +300,6 @@ static void draw_to_canvas() {
     // Draw player
     pl_draw(&pl);
 
-    // Draw splash
-    if(sprSplash.frame < 6) {
-
-        translate(0, 0);
-        spr_draw(&sprSplash, bmpSplash, splashPos.x-8, splashPos.y-8, 0);
-        use_global_camera();
-    }
-
     // Draw enemies
     for(i = 0; i < ENEMY_COUNT; ++ i) {
 
@@ -309,6 +307,12 @@ static void draw_to_canvas() {
     }
 
     
+    // Draw splashes
+    for(i=0; i < SPLASH_COUNT; ++ i) {
+
+        translate(0, 0);
+        splash_draw(&splashes[i]);
+    }
 
     // Draw item text
     if(itemTextTimer > 0.0f) {
@@ -449,7 +453,7 @@ void set_item_text(int id) {
 
 
 // Is shooting
-bool is_shooting() {
+bool can_shoot() {
 
-    return sprSplash.frame < 6 || get_status()->ammo <= 0;
+    return get_status()->ammo > 0;
 }
