@@ -9,6 +9,7 @@
 #include "player.h"
 #include "status.h"
 #include "item.h"
+#include "enemy.h"
 
 #include "../include/std.h"
 #include "../include/system.h"
@@ -20,11 +21,14 @@
 // Constants
 static const int CANVAS_X = 12;
 static const int CANVAS_Y = 12;
+static const float GOVER_MAX = 150.0f;
 #define  ITEM_COUNT 64
+#define ENEMY_COUNT 64
 
 // Bitmaps
 static BITMAP* bmpFont;
 static BITMAP* bmpGem;
+static BITMAP* bmpTimesUp;
 
 // Game canvas
 static BITMAP* gameCanvas;
@@ -32,11 +36,69 @@ static BITMAP* gameCanvas;
 // Game objects
 static PLAYER pl;
 static ITEM items[ITEM_COUNT];
+static ENEMY enemies[ENEMY_COUNT];
 
 // Item text timer
 static float itemTextTimer;
 // Item text id
 static int itemTextID;
+
+// Is the game over
+static bool gameOver;
+// Game over timer
+static float goverTimer;
+
+
+// Reset game
+static int game_reset(ASSET_PACK* ass) {
+
+    srand(0);
+
+    // Initialize components
+    init_global_camera();
+    reset_status();
+
+    pl = create_player(vec2(35*16, 28*16-8), ass);
+
+    int i = 0;
+    for(; i < ITEM_COUNT; ++ i) {
+
+        items[i].exist = false;
+    }
+
+    for(i=0; i < ENEMY_COUNT; ++ i) {
+
+        enemies[i].exist = false;
+    }
+
+    if(stage_init(ass) == 1)
+        return 1;
+
+    // Set default values
+    gameOver = false;
+    goverTimer = 0.0f;
+
+    return 0;
+}
+
+
+// Update game over
+static void update_game_over(float tm) {
+
+    goverTimer += 1.0f * tm;
+    if(goverTimer >= 150.0f) {
+
+        // Reset
+        game_reset(NULL);
+    }
+}
+
+
+// Draw game over
+static void draw_game_over() {
+
+    draw_bitmap_fast(bmpTimesUp, 16+224/2-bmpTimesUp->width/2,64);
+}
 
 
 // Set the cursor mode
@@ -100,6 +162,7 @@ static int game_init() {
     ASSET_PACK* p = global_get_asset_pack();
     bmpFont = (BITMAP*)assets_get(p, "font");
     bmpGem = (BITMAP*)assets_get(p, "gem");
+    bmpTimesUp = (BITMAP*)assets_get(p,"timeup");
 
     // Create canvas
     gameCanvas = bitmap_create(224, 176);
@@ -109,20 +172,9 @@ static int game_init() {
     }
 
     // Initialize components
-    init_global_camera();
-    reset_status();
     init_items(p);
-
-    pl = create_player(vec2(35*16, 28*16-8), p);
-
-    int i = 0;
-    for(; i < ITEM_COUNT; ++ i) {
-
-        items[i].exist = false;
-    }
-
-    if(stage_init(p) == 1)
-        return 1;
+    
+    game_reset(p);
 
     return 0;
 }
@@ -130,6 +182,16 @@ static int game_init() {
 
 // Update
 static void game_update(float tm) {
+
+    if(gameOver) {
+
+        set_cursor_mode(0);
+        update_game_over(tm);
+
+        return;
+    }
+
+    int i = 0;
 
     // Set cursor mode
     game_set_cursor_mode();
@@ -148,13 +210,26 @@ static void game_update(float tm) {
 
         // Update status
         status_update(tm);
+
+        // If no time, game over
+        if(get_status()->time <= 0.0f) {
+
+            gameOver = true;
+            goverTimer = 0.0f;
+        }
+ 
     }
 
     // Update items
-    int i = 0;
-    for(; i < ITEM_COUNT; ++ i) {
+    for(i=0; i < ITEM_COUNT; ++ i) {
 
         item_update(&items[i], &pl, tm);
+    }
+
+    // Update enemies
+    for(i=0; i < ENEMY_COUNT; ++ i) {
+
+        enemy_update(&enemies[i], &pl, tm);
     }
 
 
@@ -187,6 +262,12 @@ static void draw_to_canvas() {
 
     // Draw player
     pl_draw(&pl);
+
+    // Draw enemies
+    for(i = 0; i < ENEMY_COUNT; ++ i) {
+
+        enemy_draw(&enemies[i]);
+    }
 
     // Draw item text
     if(itemTextTimer > 0.0f) {
@@ -250,6 +331,12 @@ static void game_draw() {
     stage_draw_map(320-72 +4,12 +12, pl.pos);
 
     draw_status();
+
+    // If game over, draw "Time's Up!"
+    if(gameOver) {
+
+        draw_game_over();
+    }
     
 }
 
@@ -286,6 +373,23 @@ void add_item(POINT p, int type) {
         if(!it->exist) {
 
             *it = create_item(p, type);
+            return;
+        }
+    }
+}
+
+
+// Add an enemy
+void add_enemy(POINT p) {
+
+    int i = 0;
+    ENEMY* e;
+    for(; i < ENEMY_COUNT; ++ i) {
+
+        e = &enemies[i];
+        if(!e->exist) {
+
+            *e = create_enemy(vec2(p.x*16.0f + 8.0f, p.y*16.0f + 8.0f));
             return;
         }
     }

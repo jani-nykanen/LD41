@@ -63,7 +63,7 @@ void draw_bitmap_region_fast(BITMAP* bmp, int sx, int sy, int sw, int sh, int dx
 void draw_text(BITMAP* font, const char* text, int x, int y, int xoff, int yoff, bool center);
 
 // Draw a triangle
-void draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3, Uint8 color);
+void draw_inverse_triangle(int x1, int y1, int x2, int y2, int x3, int y3);
 
 // Draw a line
 void draw_line(int x1, int y1, int x2, int y2, Uint8 color);

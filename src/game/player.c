@@ -260,6 +260,7 @@ PLAYER create_player(VEC2 pos, ASSET_PACK* ass) {
     pl.flip = FLIP_NONE;
     pl.pspeed = 0.0f;
     pl.hurtTimer = 0.0f;
+    pl.gasTimer = 0.0f;
 
     if(ass != NULL) {
 

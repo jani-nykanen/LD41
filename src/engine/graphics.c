@@ -337,8 +337,8 @@ void draw_text(BITMAP* font, const char* text,
 
 
 // Draw top or bottom half of the triangle
-static void draw_triangle_half(int midx, int midy, int endMid, int endy, 
-    int stepx, int stepy, float dx, float dend, int x1, int y1, Uint8 color) {
+static void draw_inv_triangle_half(int midx, int midy, int endMid, int endy, 
+    int stepx, int stepy, float dx, float dend, int x1, int y1) {
 
     float sx = (float) midx;
     float ex = (float) endMid;
@@ -354,7 +354,7 @@ static void draw_triangle_half(int midx, int midy, int endMid, int endy,
 
             if(x >= 0 && x < gframe->width && y >=0 && y < gframe->height) {
                 
-                gframe->data[offset] = color;
+                gframe->data[offset] = ~gframe->data[offset];
 
             }
 
@@ -369,9 +369,16 @@ static void draw_triangle_half(int midx, int midy, int endMid, int endy,
 
 
 // Draw a triangle
-void draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3, Uint8 color) {
+void draw_inverse_triangle(int x1, int y1, int x2, int y2, int x3, int y3) {
 
     // TODO: Check if the points are NOT in the same line
+
+    x1 += tr.x;
+    y1 += tr.y;
+    x2 += tr.x;
+    y2 += tr.y;
+    x3 += tr.x;
+    y3 += tr.y;
 
     // Set points
     POINT min = point(x1, y1);
@@ -410,13 +417,13 @@ void draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3, Uint8 color) 
     // Draw the upper half
     if(mid.y != min.y) {
         
-        draw_triangle_half(mid.x,mid.y,endMid, max_2(min.y,-1),stepx, -1, dx1, dend,x1,y1, color);
+        draw_inv_triangle_half(mid.x,mid.y-1,endMid, max_2(min.y,-1),stepx, -1, dx1, dend,x1,y1);
     }
 
     // Draw the bottom half
     if(mid.y != max.y) {
 
-        draw_triangle_half(mid.x,mid.y,endMid, min_2(max.y, gframe->height),stepx, 1, dx2, -dend,x1,y1, color);
+        draw_inv_triangle_half(mid.x,mid.y,endMid, min_2(max.y, gframe->height),stepx, 1, dx2, -dend,x1,y1);
     }
 }
 

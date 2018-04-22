@@ -119,6 +119,10 @@ static void add_items() {
 
                 add_item(point(x,y), t-33);
             }
+            else if(t == 40) {
+
+                add_enemy(point(x,y));
+            }
 
         }
 
@@ -131,19 +135,21 @@ static void add_items() {
 int stage_init(ASSET_PACK* ass) {
 
     // Get assets
-    bmpTileset = (BITMAP*)assets_get(ass, "tileset");
+    if(ass != NULL) {
 
-    mapBase = (TILEMAP*)assets_get(ass, "base");
-    if(tiledata != NULL)
-        free(tiledata);
+        bmpTileset = (BITMAP*)assets_get(ass, "tileset");
+        mapBase = (TILEMAP*)assets_get(ass, "base");
+    }
 
-    if(tiledata == NULL)
+    if(tiledata == NULL) {
+
         tiledata = (int*)malloc(sizeof(int) * mapBase->width * mapBase->height);
 
-    if(tiledata == NULL ) {
+        if(tiledata == NULL ) {
 
-        error_mem_alloc();
-        return 1;
+            error_mem_alloc();
+            return 1;
+        }
     }
 
     // Copy

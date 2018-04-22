@@ -62,6 +62,8 @@ void item_update(ITEM* it, PLAYER* pl, float tm) {
     it->active = !(it->pos.x+32 < cpos.x || it->pos.x-16 > cpos.x+224 
         || it->pos.y+32 < cpos.y || it->pos.y-16 > cpos.y+176);
 
+    if(!it->active) return;
+
     // Animate
     if(it->type < 5) {
 
