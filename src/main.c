@@ -2,6 +2,8 @@
 // Main (source)
 // (c) 2018 Jani Nykänen
 
+#define SDL_MAIN_HANDLED
+
 #include "engine/core.h"
 
 // Scenes

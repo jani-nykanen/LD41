@@ -253,7 +253,7 @@ void stage_pl_collision(PLAYER* pl, float tm) {
             if(is_not_solid(t2))
                 col[3] = pl_surface_collision(pl, COL_LEFT, x*16+16, y*16, 16, tm);
 
-            if( (st->items[0] && tile == 22) || (st->items[3] && tile == 24) ) {
+            if( (st->items[0] && tile == 22) || (st->items[2] && tile == 24) ) {
 
                 for(i=0; i < 4; ++i) {
 
