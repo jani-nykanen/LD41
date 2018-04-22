@@ -4,8 +4,6 @@
 #include "assets.h"
 
 #include "bitmap.h"
-#include "sample.h"
-#include "music.h"
 #include "error.h"
 
 #include "../lib/tmxc.h"
@@ -18,8 +16,6 @@ enum {
 
     T_BITMAP = 0,
     T_TILEMAP = 1,
-    T_SAMPLE = 2,
-    T_MUSIC = 3,
 };
 
 
@@ -33,14 +29,6 @@ static int get_asset_type(const char* value) {
     else if(strcmp(value,"tilemap") == 0) {
 
         return T_TILEMAP;
-    }
-    else if(strcmp(value,"sample") == 0) {
-
-        return T_SAMPLE;
-    }
-    else if(strcmp(value,"music") == 0) {
-
-        return T_MUSIC;
     }
     
 
@@ -58,12 +46,6 @@ static void* load_asset(const char* path, int type) {
 
     case T_TILEMAP:
         return load_tilemap(path);
-
-    case T_SAMPLE:
-        return load_sample(path);
-
-    case T_MUSIC:
-        return load_music(path);
 
     default:
         return NULL;
@@ -183,11 +165,6 @@ void assets_destroy(ASSET_PACK* p) {
         case T_TILEMAP:
             destroy_tilemap((TILEMAP*)obj);
             break;
-        case T_MUSIC:
-            destroy_music((MUSIC*)obj);
-            break;
-        case T_SAMPLE:
-            destroy_sample((SAMPLE*)obj);
 
         default:
             break;

@@ -100,7 +100,7 @@ void item_update(ITEM* it, PLAYER* pl, float tm) {
             ++ st->blueCount; break;
 
         case 5:
-            st->time += 15.0f * 60.0f; break;
+            st->time += 10.0f * 60.0f; break;
 
         case 6:
             ++ st->ammo; break;

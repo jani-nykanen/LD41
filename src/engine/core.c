@@ -12,7 +12,7 @@
 
 #include "../include/std.h"
 #include "../include/renderer.h"
-#include "../include/audio.h"
+
 
 // Max scenes
 #define MAX_SCENES 32
@@ -135,14 +135,6 @@ static int core_init_SDL()
 
     // Calculate frame wait
     frameWait = 1000 / conf.frameRate;
-
-    // Initialize audio
-    if(init_audio() == 1) {
-
-        return 1;
-    }
-    init_samples();
-    init_music();
 
     return 0;
 }
