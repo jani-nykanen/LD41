@@ -32,6 +32,7 @@ static BITMAP* bmpFont;
 static BITMAP* bmpGem;
 static BITMAP* bmpTimesUp;
 static BITMAP* bmpSplash;
+static BITMAP* bmpGuide;
 
 // Game canvas
 static BITMAP* gameCanvas;
@@ -51,6 +52,64 @@ static int itemTextID;
 static bool gameOver;
 // Game over timer
 static float goverTimer;
+
+// Is the game paused
+static bool paused;
+
+// Is the guide shown
+static bool guideShown;
+// Guide timer
+static float guideTimer;
+// Guide phase
+static int guidePhase;
+
+
+// Draw guide
+static void draw_guide() {
+
+    int p = 0;
+
+    if(guidePhase == 0) {
+
+        p = (int)(-bmpGuide->width + (guideTimer/60.0f * (bmpGuide->width + 320/2 - bmpGuide->width/2) )); 
+    }
+    else if(guidePhase == 1) {
+
+        p = 320/2 - bmpGuide->width/2;
+    }
+    else {
+        p = 320/2 - bmpGuide->width/2 + (int)(guideTimer/60.0f * bmpGuide->width*2);
+    }
+
+    draw_bitmap_fast(bmpGuide,p, 200/2 - bmpGuide->height/2);
+
+}
+
+
+// Update guide
+static void update_guide(float tm) {
+
+    if(guidePhase != 1) {
+
+        guideTimer += 1.5f * tm;
+        if(guideTimer >= 60.0f) {
+
+            guideTimer = 0.0f;
+            ++ guidePhase;
+        }
+    }
+    else {
+
+        if(input_get_mouse_button(1) == STATE_PRESSED || input_get_mouse_button(3) == STATE_PRESSED
+        || get_action_state(ACTION_ESCAPE) == STATE_PRESSED || get_action_state(ACTION_PAUSE) == STATE_PRESSED) {
+
+            ++ guidePhase;
+        }
+    }
+
+    if(guidePhase == 3)
+        guideShown = true;
+}
 
 
 // Reset game
@@ -182,6 +241,7 @@ static int game_init() {
     bmpGem = (BITMAP*)assets_get(p, "gem");
     bmpTimesUp = (BITMAP*)assets_get(p,"timeup");
     bmpSplash = (BITMAP*)assets_get(p,"splash");
+    bmpGuide = (BITMAP*)assets_get(p,"guide");
 
     // Create canvas
     gameCanvas = bitmap_create(224, 176);
@@ -196,6 +256,8 @@ static int game_init() {
     
     game_reset(p);
 
+    paused = false;
+
     return 0;
 }
 
@@ -203,6 +265,9 @@ static int game_init() {
 // Update
 static void game_update(float tm) {
 
+    int i = 0;
+
+    // Update game over
     if(gameOver) {
 
         set_cursor_mode(0);
@@ -211,7 +276,24 @@ static void game_update(float tm) {
         return;
     }
 
-    int i = 0;
+    // Update guide
+    if(!guideShown && !is_fading()) {
+
+        update_guide(tm);
+        return;
+    }
+
+    // Pause
+    if(get_action_state(ACTION_PAUSE) == STATE_PRESSED) {
+
+        paused = !paused;
+    }
+    // Quit
+    else if(get_action_state(ACTION_ESCAPE) == STATE_PRESSED) {
+
+        fade(1,2.0f,core_terminate);
+    }
+    if(paused || is_fading()) return;
 
     // Set cursor mode
     game_set_cursor_mode();
@@ -286,10 +368,30 @@ static void game_update(float tm) {
         }
     }
 
+    // TEMP
+    /*
     if(input_get_key((int)SDL_SCANCODE_P) == STATE_PRESSED) {
 
         core_swap_scene("ending");
     }
+    */
+}
+
+
+// Draw pause
+static void draw_pause() {
+
+    int x = 224/2 - 32;
+    int y = 176/2 - 12;
+
+    int w = 64;
+    int h = 24;
+
+    fill_rect(x-2,y-2,w+4,h+4,0);
+    fill_rect(x-1,y-1,w+2,h+2,255);
+    fill_rect(x,y,w,h,0);
+
+    draw_text(bmpFont, "PAUSED", 224/2,176/2 - 6, -7,0, true);
 }
 
 
@@ -333,6 +435,13 @@ static void draw_to_canvas() {
 
         translate(0, 0);
         draw_item_text();
+    }
+
+    // Draw pause
+    if(paused) {
+
+        translate(0,0);
+        draw_pause();
     }
 }
 
@@ -397,6 +506,12 @@ static void game_draw() {
     if(gameOver) {
 
         draw_game_over();
+    }
+
+    // Draw guide
+    if(!guideShown && !is_fading()) {
+
+        draw_guide();
     }
 
 }
