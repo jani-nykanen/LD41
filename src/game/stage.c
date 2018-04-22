@@ -16,6 +16,7 @@
 // Bitmaps
 static BITMAP* bmpTileset;
 static BITMAP* bmpMap =NULL;
+static BITMAP* bmpTeleport;
 
 // Tilemap
 static TILEMAP* mapBase;
@@ -25,6 +26,8 @@ static int* tiledata =NULL;
 // Visited tiles
 static bool visitedTiles[4*4]; 
 
+// Teleport sprite
+static SPRITE sprTeleport;
 
 
 // Generate map
@@ -138,6 +141,7 @@ int stage_init(ASSET_PACK* ass) {
     if(ass != NULL) {
 
         bmpTileset = (BITMAP*)assets_get(ass, "tileset");
+        bmpTeleport = (BITMAP*)assets_get(ass, "teleport");
         mapBase = (TILEMAP*)assets_get(ass, "base");
     }
 
@@ -170,6 +174,9 @@ int stage_init(ASSET_PACK* ass) {
     // Add items
     add_items();
 
+    // Create sprite
+    sprTeleport = create_sprite(32,16);
+
     return 0;
 }
 
@@ -183,6 +190,12 @@ void stage_update(float tm) {
     int y = (int)floor(cpos.y / 176);
 
     visitedTiles[y * 4 + x] = true;
+
+    // Animate teleport, if needed
+    if(get_status()->blueCount >= 8) {
+
+        spr_animate(&sprTeleport, 0,1,3,4, tm);
+    }
 }
 
 
@@ -291,6 +304,22 @@ void stage_draw(VEC2 p) {
 
     }
 
+    // Draw teleport
+    
+    if(get_status()->blueCount >= 8) {
+
+        int f = sprTeleport.frame;
+        Uint8 col = 255;
+        if(f == 1)
+            col = 255;
+        else if(f == 2)
+            col = 0b10010011;
+        else if(f == 3)
+            col = 0b11011011;  
+
+        fill_rect(48*16 +4, 16,24,6*16, col);
+    }
+    spr_draw(&sprTeleport,bmpTeleport, 48*16,6*16, 0);
 }
 
 

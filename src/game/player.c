@@ -202,7 +202,7 @@ static void pl_animate(PLAYER* pl, float tm) {
 
     if(pl->hurtTimer > 0.0f) {
 
-        spr_animate(&pl->spr, 1, 0,1,3, tm);
+        spr_animate(&pl->spr, 1, 0,1,4, tm);
     }
     else {
 

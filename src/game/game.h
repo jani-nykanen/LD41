@@ -21,4 +21,7 @@ void add_enemy(POINT p);
 // Set item text
 void set_item_text(int id);
 
+// Is shooting
+bool is_shooting();
+
 #endif // __GAME__

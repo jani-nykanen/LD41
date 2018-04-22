@@ -29,6 +29,7 @@ static const float GOVER_MAX = 150.0f;
 static BITMAP* bmpFont;
 static BITMAP* bmpGem;
 static BITMAP* bmpTimesUp;
+static BITMAP* bmpSplash;
 
 // Game canvas
 static BITMAP* gameCanvas;
@@ -47,6 +48,11 @@ static int itemTextID;
 static bool gameOver;
 // Game over timer
 static float goverTimer;
+
+// Splash sprite
+static SPRITE sprSplash;
+// Splash pos
+static POINT splashPos;
 
 
 // Reset game
@@ -77,6 +83,9 @@ static int game_reset(ASSET_PACK* ass) {
     // Set default values
     gameOver = false;
     goverTimer = 0.0f;
+
+    sprSplash = create_sprite(16,16);
+    sprSplash.frame = 6;
 
     return 0;
 }
@@ -149,9 +158,9 @@ static void draw_item_text() {
     };
 
     if(itemTextID == 0 || itemTextID == 3)
-        draw_text(bmpFont,text[itemTextID],224/2,16,-7,0,true);
+        draw_text(bmpFont,text[itemTextID],224/2,32,-7,0,true);
     else
-        draw_text(bmpFont,text[itemTextID],224/2 -60,16,-7,0,false);
+        draw_text(bmpFont,text[itemTextID],224/2 -60,32,-7,0,false);
 }
 
 
@@ -163,6 +172,7 @@ static int game_init() {
     bmpFont = (BITMAP*)assets_get(p, "font");
     bmpGem = (BITMAP*)assets_get(p, "gem");
     bmpTimesUp = (BITMAP*)assets_get(p,"timeup");
+    bmpSplash = (BITMAP*)assets_get(p,"splash");
 
     // Create canvas
     gameCanvas = bitmap_create(224, 176);
@@ -239,6 +249,27 @@ static void game_update(float tm) {
         itemTextTimer -= 1.0f * tm;
     }
 
+    // Splash!
+    if(sprSplash.frame < 6) {
+
+        spr_animate(&sprSplash,0,0,6, 2, tm);
+    }
+    else if(get_status()->ammo > 0 && input_get_mouse_button(3) == STATE_PRESSED) {
+
+        POINT c = input_get_cursor_pos();
+        if(c.x >= CANVAS_X && c.x <= CANVAS_X + gameCanvas->width
+         && c.y >= CANVAS_Y && c.y <= CANVAS_Y + gameCanvas->height) {
+          
+            splashPos.x = c.x - CANVAS_X;
+            splashPos.y = c.y - CANVAS_Y;
+
+            sprSplash.frame = 0;
+            sprSplash.count = 0.0f;
+
+            -- get_status()->ammo;
+
+        }
+    }
 }
 
 
@@ -263,16 +294,26 @@ static void draw_to_canvas() {
     // Draw player
     pl_draw(&pl);
 
+    // Draw splash
+    if(sprSplash.frame < 6) {
+
+        translate(0, 0);
+        spr_draw(&sprSplash, bmpSplash, splashPos.x-8, splashPos.y-8, 0);
+        use_global_camera();
+    }
+
     // Draw enemies
     for(i = 0; i < ENEMY_COUNT; ++ i) {
 
         enemy_draw(&enemies[i]);
     }
 
+    
+
     // Draw item text
     if(itemTextTimer > 0.0f) {
 
-        translate(CANVAS_X, CANVAS_Y);
+        translate(0, 0);
         draw_item_text();
     }
 }
@@ -284,7 +325,9 @@ static void draw_status() {
     // Draw time
     char str[16];
     status_get_time_string(str);
-    draw_text(bmpFont, str, 264,93,-8,0, false);
+
+    if(pl.hurtTimer <= 0 || pl.spr.frame == 0)
+        draw_text(bmpFont, str, 264,93,-8,0, false);
 
     // Draw icons
     draw_bitmap_region(bmpGem,0,32,16,16,248,92, 0);
@@ -402,4 +445,11 @@ void set_item_text(int id) {
     itemTextTimer = 150.0f;
     itemTextID = id;
 
+}
+
+
+// Is shooting
+bool is_shooting() {
+
+    return sprSplash.frame < 6 || get_status()->ammo <= 0;
 }
