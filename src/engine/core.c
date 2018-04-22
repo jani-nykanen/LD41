@@ -509,3 +509,21 @@ void core_terminate() {
 
     isRunning = false;
 }
+
+
+// Swap a scene
+void core_swap_scene(const char* scene) {
+
+    int i = 0;
+    for(; i < sceneCount; ++ i) {
+
+        if(strcmp(scenes[i].name,scene) == 0) {
+
+            currentScene = i;
+            if(scenes[i].fnSwap != NULL) {
+
+                scenes[i].fnSwap();
+            }
+        }
+    }
+}

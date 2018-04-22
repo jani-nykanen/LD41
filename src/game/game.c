@@ -87,7 +87,17 @@ static int game_reset(ASSET_PACK* ass) {
     gameOver = false;
     goverTimer = 0.0f;
 
+    // Fade
+    fade(-1,2.0f, NULL);
+
     return 0;
+}
+
+
+// Reset callback
+static void reset_cb() {
+
+    game_reset(NULL);
 }
 
 
@@ -95,10 +105,9 @@ static int game_reset(ASSET_PACK* ass) {
 static void update_game_over(float tm) {
 
     goverTimer += 1.0f * tm;
-    if(goverTimer >= 150.0f) {
+    if(goverTimer >= 120.0f && !is_fading()) {
 
-        // Reset
-        game_reset(NULL);
+        fade(1,2.0f, reset_cb);
     }
 }
 
@@ -276,6 +285,11 @@ static void game_update(float tm) {
 
         }
     }
+
+    if(input_get_key((int)SDL_SCANCODE_P) == STATE_PRESSED) {
+
+        core_swap_scene("ending");
+    }
 }
 
 
@@ -384,7 +398,7 @@ static void game_draw() {
 
         draw_game_over();
     }
-    
+
 }
 
 
@@ -397,6 +411,7 @@ static void game_destroy() {
 // Change
 static void game_on_change() {
 
+    game_reset(NULL);
 }
 
 

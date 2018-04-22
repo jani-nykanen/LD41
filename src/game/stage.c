@@ -266,6 +266,15 @@ void stage_pl_collision(PLAYER* pl, float tm) {
             
         }
     }
+
+    // Teleport collision
+    if(get_status()->blueCount >= 8) {
+
+        if(pl->pos.x > 48*16 && pl->pos.x < 48*16+32 && pl->pos.y < 7*16) {
+
+            core_swap_scene("ending");
+        }
+    }
 }
 
 
@@ -305,7 +314,6 @@ void stage_draw(VEC2 p) {
     }
 
     // Draw teleport
-    
     if(get_status()->blueCount >= 8) {
 
         int f = sprTeleport.frame;

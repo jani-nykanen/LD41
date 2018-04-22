@@ -9,6 +9,9 @@
 
 #include "../include/std.h"
 
+// Darkness palette size
+#define DARKNESS_PALATTE_SIZE 7
+
 // Used ("global") frame
 static FRAME* gframe =NULL;
 // Used frame
@@ -23,6 +26,74 @@ static Uint8 alpha = 170;
 
 // Translation
 static POINT tr;
+
+// Darkness palette
+static Uint8 dpalette[DARKNESS_PALATTE_SIZE] [256];
+
+
+// Generate darkness palettes
+static void gen_darkness_palettes() {
+
+    Uint8 r,g,b;
+
+    int i = 0;
+    int i2 = 0;
+    int loop = 0;
+    for(; loop < DARKNESS_PALATTE_SIZE; ++ loop) {
+
+        for(i = 0; i < 256; ++ i) {
+
+            if(loop == DARKNESS_PALATTE_SIZE-1) {
+
+                dpalette[loop][i] = 0;
+                continue;
+            }
+
+            r = i >> 5;
+            g = i << 3;
+            g = g >> 5;
+            b = i << 6;
+            b = b >> 6;
+
+            for(i2=0; i2 < loop; ++ i2)
+            {
+                if(r>0) -- r;
+                if(g>0) -- g;
+                
+                if(i2 % 2 == 1) {
+
+                    if(b > 0) --b;
+                }
+            }
+
+            r = r << 5;
+            g = g << 2;
+
+            dpalette[loop][i] = r | g | b;
+        }
+    }
+}
+
+
+// Get texture color
+static Uint8 get_color_dark(int dvalue, int x, int y, Uint8 col) {
+
+    // Set darkness
+    if(dvalue % 2 == 0) {
+
+        return dpalette[dvalue/2][col];
+    }
+    else {
+
+        if( (x % 2 == 0 && y % 2 == 0) || (x % 2 == 1 && y % 2 == 1) )
+            return dpalette[dvalue/2][col];
+        else
+            return dpalette[dvalue/2+1][col];
+    }
+
+    return col;
+
+}
 
 
 // Clip bitmap
@@ -78,6 +149,8 @@ void graphics_init(SDL_Renderer* rend) {
 
     grend = rend;
     tr = point(0, 0);
+
+    gen_darkness_palettes();
 }
 
 
@@ -479,3 +552,16 @@ void set_render_target(BITMAP* target) {
     }
 }
 
+
+// Darken the whole screen
+void darken(int d) {
+
+    if(d <= 0) return;
+    if(d > 12) d = 12;
+
+    int i = 0;
+    for(; i < gframe->width*gframe->height; ++ i) {
+
+        gframe->data[i]= get_color_dark(d, i % gframe->width, i / gframe->width, gframe->data[i]);
+    }
+}

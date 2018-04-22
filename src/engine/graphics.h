@@ -77,4 +77,7 @@ void translate(int x, int y);
 // Set the render target
 void set_render_target(BITMAP* target);
 
+// Darken the whole screen
+void darken(int d);
+
 #endif // __GRAPHICS__

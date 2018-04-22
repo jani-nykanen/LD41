@@ -19,7 +19,7 @@ void reset_status() {
 
     st.blueCount = 0;
     st.redCount = 0;
-    st.ammo = 5;
+    st.ammo = 9;
 
     st.time = 30.0f * 60.0f;
 }

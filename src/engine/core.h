@@ -27,4 +27,7 @@ CONFIG core_get_config();
 // Terminate
 void core_terminate();
 
+// Swap a scene
+void core_swap_scene(const char* scene);
+
 #endif // __CORE__
